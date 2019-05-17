@@ -132,13 +132,10 @@ module Capybara::Cuprite
 
           case response["subtype"]
           when "node"
-            begin
+            rescue_browser_error do
               node_id = command("DOM.requestNode", objectId: object_id)["nodeId"]
               node = command("DOM.describeNode", nodeId: node_id)["node"].merge("nodeId" => node_id)
               { "target_id" => target_id, "node" => node }
-            rescue BrowserError => e
-              # Node has disappeared while we were trying to get it
-              raise if e.message != "Could not find node with given id"
             end
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
@@ -160,13 +157,16 @@ module Capybara::Cuprite
       end
 
       def reduce_props(object_id, to)
-        if cyclic?(object_id).dig("result", "value")
-          return "(cyclic structure)"
-        else
-          props = command("Runtime.getProperties", objectId: object_id)
-          props["result"].reduce(to) do |memo, prop|
-            next(memo) unless prop["enumerable"]
-            yield(memo, prop["name"], prop["value"])
+        rescue_browser_error do
+          if cyclic?(object_id).dig("result", "value")
+            return "(cyclic structure)"
+          else
+            # => Here error happens
+            props = command("Runtime.getProperties", objectId: object_id)
+            props["result"].reduce(to) do |memo, prop|
+              next(memo) unless prop["enumerable"]
+              yield(memo, prop["name"], prop["value"])
+            end
           end
         end
       end
@@ -176,6 +176,15 @@ module Capybara::Cuprite
                 objectId: object_id,
                 returnByValue: true,
                 functionDeclaration: "function() { return _cuprite.isCyclic(this); }")
+      end
+
+      def rescue_browser_error(max_attempts = 0)
+        yield
+      rescue BrowserError => e
+        # Context is lost, page is reloading
+        raise if e.message != "Cannot find context with specified id"
+        # Node has disappeared while we were trying to get it
+        raise if e.message != "Could not find node with given id"
       end
     end
   end
