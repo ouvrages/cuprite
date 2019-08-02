@@ -7,10 +7,10 @@ Thread.report_on_exception = true if Thread.respond_to?(:report_on_exception=)
 
 module Capybara::Cuprite
   require "capybara/cuprite/driver"
-  require "capybara/cuprite/browser"
-  require "capybara/cuprite/node"
-  require "capybara/cuprite/errors"
-  require "capybara/cuprite/cookie"
+  # require "capybara/cuprite/browser"
+  # require "capybara/cuprite/node"
+  # require "capybara/cuprite/errors"
+  # require "capybara/cuprite/cookie"
 
   class << self
     def windows?

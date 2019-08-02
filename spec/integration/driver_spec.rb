@@ -72,7 +72,7 @@ module Capybara::Cuprite
 
     it "raises an error and restarts the client if the client dies while executing a command" do
       driver = Capybara::Cuprite::Driver.new(nil)
-      expect { driver.browser.crash }.to raise_error(DeadBrowser)
+      expect { driver.browser.crash }.to raise_error(Ferrum::DeadBrowser)
       driver.visit(session_url("/"))
       expect(driver.html).to include("Hello world")
     end
@@ -583,7 +583,7 @@ module Capybara::Cuprite
       it "propagates a Javascript error inside Cuprite to a ruby exception" do
         expect do
           driver.browser.browser_error
-        end.to raise_error(JavaScriptError) { |e|
+        end.to raise_error(Ferrum::JavaScriptError) { |e|
           expect(e.message).to include("Error: zomg")
           expect(e.message).to include("Cuprite.browserError")
         }
@@ -594,13 +594,13 @@ module Capybara::Cuprite
           driver.execute_script "setTimeout(function() { omg }, 0)"
           sleep 0.01
           driver.execute_script ""
-        end.to raise_error(JavaScriptError, /ReferenceError.*omg/)
+        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
       it "propagates a synchronous Javascript error on the page to a ruby exception" do
         expect do
           driver.execute_script "omg"
-        end.to raise_error(JavaScriptError, /ReferenceError.*omg/)
+        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
       it "does not re-raise a Javascript error if it is rescued" do
@@ -608,14 +608,14 @@ module Capybara::Cuprite
           driver.execute_script "setTimeout(function() { omg }, 0)"
           sleep 0.01
           driver.execute_script ""
-        end.to raise_error(JavaScriptError)
+        end.to raise_error(Ferrum::JavaScriptError)
 
         # should not raise again
         expect(driver.evaluate_script("1+1")).to eq(2)
       end
 
       it "propagates a Javascript error during page load to a ruby exception" do
-        expect { driver.visit session_url("/cuprite/js_error") }.to raise_error(JavaScriptError)
+        expect { driver.visit session_url("/cuprite/js_error") }.to raise_error(Ferrum::JavaScriptError)
       end
 
       it "does not propagate a Javascript error to ruby if error raising disabled" do
@@ -652,14 +652,14 @@ module Capybara::Cuprite
       end
 
       it "handles when DNS incorrect" do
-        expect { @session.visit("http://nope:#{@port}/") }.to raise_error(StatusFailError)
+        expect { @session.visit("http://nope:#{@port}/") }.to raise_error(Ferrum::StatusFailError)
       end
 
       it "has a descriptive message when DNS incorrect" do
         url = "http://nope:#{@port}/"
         expect { @session.visit(url) }
           .to raise_error(
-            StatusFailError,
+            Ferrum::StatusFailError,
             %(Request to #{url} failed to reach server, check DNS and/or server status)
           )
       end
@@ -670,7 +670,7 @@ module Capybara::Cuprite
           @session.driver.timeout = 2
           expect do
             @session.visit("/cuprite/visit_timeout")
-          end.to raise_error(StatusFailError, %r{resources still waiting http://.*/cuprite/really_slow})
+          end.to raise_error(Ferrum::StatusFailError, %r{resources still waiting http://.*/cuprite/really_slow})
         ensure
           @session.driver.timeout = old_timeout
         end
@@ -682,7 +682,7 @@ module Capybara::Cuprite
           @session.driver.timeout = 2
           expect do
             @session.visit("/cuprite/really_slow")
-          end.to raise_error(StatusFailError) { |error|
+          end.to raise_error(Ferrum::StatusFailError) { |error|
             expect(error.message).not_to include("resources still waiting")
           }
         ensure
@@ -1532,7 +1532,7 @@ module Capybara::Cuprite
         @session.using_wait_time(1) do
           expect do
             @session.driver.evaluate_async_script("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)")
-          end.to raise_error Capybara::Cuprite::ScriptTimeoutError
+          end.to raise_error Ferrum::ScriptTimeoutError
         end
       end
     end

@@ -8,7 +8,7 @@ describe Capybara::Session do
   context "with cuprite driver" do
     before { @session = TestSessions::Cuprite }
 
-    describe Capybara::Cuprite::Node do
+    describe "Capybara::Cuprite::Node" do
       it "raises an error if the element has been removed from the DOM" do
         @session.visit("/cuprite/with_js")
         node = @session.find(:css, "#remove_me")
@@ -351,7 +351,7 @@ describe Capybara::Session do
       expect(@session.evaluate_script("new Array")).to eq([])
       expect(@session.evaluate_script("new Function")).to eq({})
 
-      expect { @session.evaluate_script(%(throw "smth")) }.to raise_error(Capybara::Cuprite::JavaScriptError)
+      expect { @session.evaluate_script(%(throw "smth")) }.to raise_error(Ferrum::JavaScriptError)
     end
 
     it "ignores cyclic structure errors in evaluate_script" do
